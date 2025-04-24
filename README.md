@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 欸！要吃什麼！
 
-## Getting Started
+「欸！要吃什麼！」是一個幫助用戶快速決定用餐選擇的手機版網頁應用。當用戶無法決定吃什麼時，只需點擊一個按鈕，應用程式就會根據用戶當前位置，隨機推薦附近的餐廳，解決用戶的「選擇困難症」。
 
-First, run the development server:
+## 功能特色
+
+- 自動獲取用戶當前位置
+- 隨機推薦附近的餐廳
+- 顯示餐廳名稱、地址、評分等信息
+- 點擊餐廳卡片可直接開啟 Google Maps 導航
+- 「再抽一次」功能提供新的餐廳推薦，不重複之前顯示過的餐廳
+
+## 技術規格
+
+- 前端框架：React + Next.js
+- UI 元件庫：Material Design
+- 外部 API：Google Maps Places API
+- 定位服務：瀏覽器 Geolocation API
+
+## 開始使用
+
+### 1. 安裝依賴
+
+```bash
+npm install
+```
+
+### 2. 設置環境變數
+
+在專案根目錄創建一個 `.env.local` 檔案，並添加以下內容：
+
+```
+GOOGLE_MAPS_API_KEY=您的Google_Maps_API_金鑰
+```
+
+注意：
+- 請將此金鑰存儲在 `.env.local` 文件中，不要提交到版本控制系統
+- 只通過後端 API 路由使用此金鑰，不要在前端代碼中暴露
+- 所有 Google API 請求應通過 Next.js API 路由進行代理
+
+### 3. 啟動開發伺服器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+在瀏覽器中打開 [http://localhost:3000](http://localhost:3000) 查看應用程式。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Google Maps API 設置
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+本應用程式使用 Google Maps Places API 獲取附近餐廳信息。您需要在 Google Cloud Platform 上創建一個專案並啟用以下 API：
 
-## Learn More
+- Places API (地點搜索)
+- Maps JavaScript API (地圖顯示)
+- Geocoding API (地址轉座標)
+- Directions API (導航功能)
 
-To learn more about Next.js, take a look at the following resources:
+### 獲取 API 金鑰的步驟
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. 登入 [Google Cloud Console](https://console.cloud.google.com/)
+2. 創建一個新專案
+3. 啟用上述必要的 API
+4. 創建 API 金鑰
+5. 設置 API 金鑰限制（建議限制 HTTP 參照網址和 API 使用範圍）
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 專案結構
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── api/                 # API 路由
+│   │   ├── nearby-restaurants/  # 獲取附近餐廳的 API
+│   │   └── place-photo/     # 獲取餐廳照片的 API
+│   ├── recommendation/      # 推薦頁面
+│   ├── globals.css          # 全局樣式
+│   ├── layout.tsx           # 應用程式布局
+│   └── page.tsx             # 首頁
+└── ...
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 部署
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+您可以使用 [Vercel Platform](https://vercel.com/) 輕鬆部署此 Next.js 應用程式。部署時，請確保設置環境變數 `GOOGLE_MAPS_API_KEY`。
