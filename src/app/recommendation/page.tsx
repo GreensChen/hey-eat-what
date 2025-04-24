@@ -320,7 +320,7 @@ export default function RecommendationPage() {
                 boxShadow: 2
               }}
             >
-              {refreshing ? <CircularProgress size={24} color="inherit" /> : "我不要！"}
+              {refreshing ? <CircularProgress size={24} color="inherit" /> : "我不要"}
             </Button>
           </Box>
         </>
