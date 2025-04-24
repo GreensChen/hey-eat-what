@@ -248,13 +248,19 @@ export default function RecommendationPage() {
                 <CardMedia
                   component="img"
                   height="160"
+                  sx={{
+                    width: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    aspectRatio: '16/9'
+                  }}
                   image={restaurant.photos && restaurant.photos.length > 0 
                     ? getPhotoUrl(restaurant.photos[0].photo_reference)
                     : "https://via.placeholder.com/400x160?text=沒有照片"}
                   alt={restaurant.name}
                 />
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
+                <CardContent sx={{ minHeight: '180px' }}>
+                  <Typography variant="h6" gutterBottom noWrap sx={{ fontWeight: 'bold' }}>
                     {restaurant.name}
                   </Typography>
                   
