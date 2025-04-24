@@ -81,7 +81,7 @@ export default function Home() {
   return (
     <Container maxWidth="sm" sx={{ height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
       <Box textAlign="center" sx={{ mb: 4 }}>
-        <Typography variant="h2" component="h2" gutterBottom sx={{ fontWeight: "bold", mb: 4 }}>
+        <Typography variant="h2" component="h2" gutterBottom sx={{ fontWeight: "bold", mb: 4, fontSize: 'calc(2.75rem - 2px)' }}>
           欸！要吃什麼？
         </Typography>
         
