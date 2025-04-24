@@ -3,23 +3,25 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Container, 
-  Typography, 
   Box, 
+  Button, 
   Card, 
   CardContent, 
   CardMedia, 
-  Button, 
   CircularProgress,
-  Rating,
-  Stack,
-  IconButton
+  Collapse, 
+  Container, 
+  IconButton, 
+  Rating, 
+  Stack, 
+  Typography 
 } from "@mui/material";
 import { 
   LocationOn as LocationIcon, 
   Star as StarIcon,
   Refresh as RefreshIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  AccessTime as AccessTimeIcon
 } from "@mui/icons-material";
 
 // 餐廳資料介面
@@ -55,6 +57,35 @@ export default function RecommendationPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [shownRestaurants, setShownRestaurants] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // 獲取餐廳詳細資訊的函數
+  const getPlaceDetails = async (placeId: string) => {
+    try {
+      const response = await fetch(`/api/places/details?placeId=${placeId}`);
+      
+      if (!response.ok) {
+        throw new Error(`獲取餐廳詳細資訊失敗: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.details;
+    } catch (error) {
+      console.error('獲取餐廳詳細資訊時出錯:', error);
+      return null;
+    }
+  };
+  
+  // 將英文星期轉換為中文星期
+  const convertWeekdayToChinese = (weekdayText: string) => {
+    return weekdayText
+      .replace('Monday', '星期一')
+      .replace('Tuesday', '星期二')
+      .replace('Wednesday', '星期三')
+      .replace('Thursday', '星期四')
+      .replace('Friday', '星期五')
+      .replace('Saturday', '星期六')
+      .replace('Sunday', '星期日');
+  };
   
   // 用於開發測試的日誌輸出
   useEffect(() => {
@@ -116,18 +147,52 @@ export default function RecommendationPage() {
           console.log("營業時間數據:", data.restaurants[0].opening_hours);
           // 隨機選擇 3 間餐廳
           const randomRestaurants = getRandomRestaurants(data.restaurants, 3);
-          setRestaurants(randomRestaurants);
           
-          // 檢查隨機選擇的餐廳是否有營業時間數據
-          console.log("隨機選擇的餐廳:", randomRestaurants.map(r => ({
+          // 為每個餐廳獲取詳細資訊
+          console.log('為餐廳獲取詳細資訊...');
+          const restaurantsWithDetails = await Promise.all(
+            randomRestaurants.map(async (restaurant) => {
+              // 如果餐廳已經有營業時間數據，則不需要再次獲取
+              if (restaurant.opening_hours?.weekday_text) {
+                console.log(`餐廳 ${restaurant.name} 已有營業時間數據，無需再次獲取`);
+                return restaurant;
+              }
+              
+              console.log(`為餐廳 ${restaurant.name} 獲取詳細資訊...`);
+              const details = await getPlaceDetails(restaurant.place_id);
+              
+              if (!details) {
+                console.log(`無法獲取餐廳 ${restaurant.name} 的詳細資訊`);
+                return restaurant;
+              }
+              
+              console.log(`成功獲取餐廳 ${restaurant.name} 的詳細資訊:`, details);
+              
+              // 合併餐廳資訊與詳細資訊
+              return {
+                ...restaurant,
+                business_status: details.business_status || restaurant.business_status,
+                opening_hours: details.opening_hours ? {
+                  open_now: details.opening_hours.open_now,
+                  weekday_text: details.opening_hours.weekday_text
+                } : restaurant.opening_hours
+              };
+            })
+          );
+          
+          // 檢查餐廳是否有營業時間數據
+          console.log("包含詳細資訊的餐廳:", restaurantsWithDetails.map(r => ({
             name: r.name,
             opening_hours: r.opening_hours
           })));
           
+          // 設置餐廳列表
+          setRestaurants(restaurantsWithDetails);
+          
           // 更新已顯示餐廳列表
           const newShownIds = [
             ...excludeIds,
-            ...randomRestaurants.map(r => r.place_id)
+            ...restaurantsWithDetails.map(r => r.place_id)
           ];
           setShownRestaurants(newShownIds);
           sessionStorage.setItem("shownRestaurants", JSON.stringify(newShownIds));
@@ -256,6 +321,9 @@ export default function RecommendationPage() {
                   borderRadius: 2,
                   cursor: "pointer",
                   transition: "transform 0.2s",
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 'auto',
                   "&:hover": {
                     transform: "translateY(-4px)"
                   }
@@ -276,7 +344,7 @@ export default function RecommendationPage() {
                     : "https://via.placeholder.com/400x160?text=沒有照片"}
                   alt={restaurant.name}
                 />
-                <CardContent sx={{ minHeight: '200px', pb: 0, mb: -5 }}>
+                <CardContent sx={{ flexGrow: 1, pb: 0, mb: 0 }}>
                   <Typography variant="h6" gutterBottom noWrap sx={{ fontWeight: 'bold' }}>
                     {restaurant.name}
                   </Typography>
@@ -310,18 +378,37 @@ export default function RecommendationPage() {
                     })()}
                   </Box>
                   
-                  {restaurant.opening_hours?.weekday_text ? (
+                  {restaurant.opening_hours ? (
                     <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                        營業時間
-                      </Typography>
-                      <Box sx={{ pl: 1 }}>
-                        {restaurant.opening_hours.weekday_text.map((day, index) => (
-                          <Typography key={index} variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                            {day}
-                          </Typography>
-                        ))}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <AccessTimeIcon fontSize="small" color="action" sx={{ mt: 0.3, mr: 0.5 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: restaurant.opening_hours.open_now ? 'primary.main' : 'text.secondary' }}>
+                          {restaurant.opening_hours.open_now ? '營業中' : '休息中'}
+                        </Typography>
                       </Box>
+                      
+                      {restaurant.opening_hours.weekday_text ? (
+                        <Collapse in={true}>
+                          <Box sx={{ pl: 3, borderLeft: '1px solid #eee', ml: 0.5 }}>
+                            {restaurant.opening_hours.weekday_text.map((day, index) => {
+                              // 將英文星期轉換為中文星期
+                              const chineseDay = convertWeekdayToChinese(day);
+                              const [weekday, hours] = chineseDay.split(': ');
+                              
+                              return (
+                                <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mr: 2, minWidth: '60px' }}>
+                                    {weekday}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', flexGrow: 1 }}>
+                                    {hours}
+                                  </Typography>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </Collapse>
+                      ) : null}
                     </Box>
                   ) : (
                     <Typography variant="body2" color="text.secondary">
@@ -329,7 +416,7 @@ export default function RecommendationPage() {
                     </Typography>
                   )}
                 </CardContent>
-                <Box sx={{ px: 2, pb: 2, pt: 0, mt: 0 }}>
+                <Box sx={{ px: 2, pb: 2, pt: 1 }}>
                   <Button 
                     variant="text" 
                     color="primary" 
