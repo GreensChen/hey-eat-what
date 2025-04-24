@@ -210,7 +210,7 @@ export default function RecommendationPage() {
         <IconButton onClick={handleBackToHome} sx={{ mr: 2 }}>
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant="h5" component="h1" gutterBottom>
           推薦餐廳
         </Typography>
       </Box>
