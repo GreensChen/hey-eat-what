@@ -206,10 +206,10 @@ export default function RecommendationPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4, position: "relative" }}>
+      <Box sx={{ mb: 4, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", width: "100%" }}>
         <IconButton 
           onClick={handleBackToHome} 
-          sx={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)" }}
+          sx={{ position: "absolute", left: 0 }}
         >
           <ArrowBackIcon />
         </IconButton>
@@ -217,10 +217,14 @@ export default function RecommendationPage() {
           variant="h4" 
           component="h1" 
           gutterBottom 
-          align="center" 
-          sx={{ width: "100%", px: 5 }}
+          sx={{ 
+            fontSize: 'calc(1.5rem - 4px)', 
+            fontWeight: "bold",
+            flexGrow: 1,
+            textAlign: "center"
+          }}
         >
-          推薦餐廳
+          就這個吧！
         </Typography>
       </Box>
       
