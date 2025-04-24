@@ -310,7 +310,6 @@ export default function RecommendationPage() {
             <Button 
               variant="contained" 
               color="primary" 
-              startIcon={<RefreshIcon />}
               onClick={handleRefresh}
               disabled={refreshing}
               sx={{ 
@@ -321,7 +320,7 @@ export default function RecommendationPage() {
                 boxShadow: 2
               }}
             >
-              {refreshing ? <CircularProgress size={24} color="inherit" /> : "再抽一次"}
+              {refreshing ? <CircularProgress size={24} color="inherit" /> : "還有別的嗎？"}
             </Button>
           </Box>
         </>
