@@ -41,6 +41,11 @@ interface Restaurant {
     open_now?: boolean;
     weekday_text?: string[];
   };
+  phone?: string;
+  address?: string;
+  description?: string;
+  website?: string;
+  travel_time?: string;
 }
 
 export default function RecommendationPage() {
@@ -105,10 +110,19 @@ export default function RecommendationPage() {
         const data = await response.json();
         console.log("API 回應:", data);
         
+        // 檢查是否有營業時間數據
         if (data.restaurants && data.restaurants.length > 0) {
+          console.log("第一個餐廳詳細數據:", JSON.stringify(data.restaurants[0], null, 2));
+          console.log("營業時間數據:", data.restaurants[0].opening_hours);
           // 隨機選擇 3 間餐廳
           const randomRestaurants = getRandomRestaurants(data.restaurants, 3);
           setRestaurants(randomRestaurants);
+          
+          // 檢查隨機選擇的餐廳是否有營業時間數據
+          console.log("隨機選擇的餐廳:", randomRestaurants.map(r => ({
+            name: r.name,
+            opening_hours: r.opening_hours
+          })));
           
           // 更新已顯示餐廳列表
           const newShownIds = [
@@ -262,7 +276,7 @@ export default function RecommendationPage() {
                     : "https://via.placeholder.com/400x160?text=沒有照片"}
                   alt={restaurant.name}
                 />
-                <CardContent sx={{ minHeight: '150px', pb: 0, mb: -2 }}>
+                <CardContent sx={{ minHeight: '200px', pb: 0, mb: -5 }}>
                   <Typography variant="h6" gutterBottom noWrap sx={{ fontWeight: 'bold' }}>
                     {restaurant.name}
                   </Typography>
@@ -288,7 +302,15 @@ export default function RecommendationPage() {
                     </Typography>
                   </Box>
                   
-                  {restaurant.opening_hours?.weekday_text && (
+                  {/* 打印營業時間數據以進行調試 */}
+                  <Box sx={{ display: 'none' }}>
+                    {(() => {
+                      console.log('餐廳營業時間數據:', restaurant.name, restaurant.opening_hours);
+                      return null;
+                    })()}
+                  </Box>
+                  
+                  {restaurant.opening_hours?.weekday_text ? (
                     <Box sx={{ mt: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                         營業時間
@@ -301,6 +323,10 @@ export default function RecommendationPage() {
                         ))}
                       </Box>
                     </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      無營業時間資訊
+                    </Typography>
                   )}
                 </CardContent>
                 <Box sx={{ px: 2, pb: 2, pt: 0, mt: 0 }}>

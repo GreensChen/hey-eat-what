@@ -2,6 +2,23 @@ import { NextResponse } from 'next/server';
 
 // 處理獲取附近餐廳的請求
 export async function GET(request: Request) {
+  // 台灣觀光局 API URL
+  const taiwanApiUrl = 'https://media.taiwan.net.tw/XMLReleaseALL_public/restaurant_C_f.json';
+  
+  try {
+    // 嘗試從台灣觀光局 API 獲取餐廳數據
+    console.log('嘗試從台灣觀光局 API 獲取餐廳數據...');
+    const taiwanApiResponse = await fetch(taiwanApiUrl);
+    
+    if (taiwanApiResponse.ok) {
+      const taiwanData = await taiwanApiResponse.json();
+      console.log('台灣觀光局 API 響應成功，數據範例:', JSON.stringify(taiwanData.XML_Head).substring(0, 200));
+    } else {
+      console.error('台灣觀光局 API 響應失敗:', taiwanApiResponse.status);
+    }
+  } catch (error) {
+    console.error('從台灣觀光局 API 獲取數據時出錯:', error);
+  }
   try {
     // 從 URL 參數中獲取位置信息
     const url = new URL(request.url);
@@ -82,6 +99,8 @@ export async function GET(request: Request) {
       nearbyUrl.searchParams.append('type', 'restaurant');
       nearbyUrl.searchParams.append('key', apiKey);
       nearbyUrl.searchParams.append('language', 'zh-TW');
+      // 添加 fields 參數，獲取營業時間數據
+      nearbyUrl.searchParams.append('fields', 'place_id,name,vicinity,formatted_address,rating,user_ratings_total,photos,geometry,business_status,opening_hours');
 
       response = await fetch(nearbyUrl.toString());
       
@@ -137,6 +156,11 @@ export async function GET(request: Request) {
           lng: number;
         }
       };
+      business_status?: string;
+      opening_hours?: {
+        open_now?: boolean;
+        weekday_text?: string[];
+      };
     }
 
     // 定義舊版 Restaurant 介面，用於與前端兼容
@@ -169,29 +193,47 @@ export async function GET(request: Request) {
         return await fallbackToTextSearch(location, apiKey, excludeIds);
       }
       
-      convertedResults = data.results.map((place: OldApiPlace) => ({
-        place_id: place.place_id,
-        name: place.name,
-        vicinity: place.vicinity,
-        rating: place.rating,
-        user_ratings_total: place.user_ratings_total,
-        photos: place.photos ? place.photos.map((photo: { photo_reference: string }) => ({
-          photo_reference: photo.photo_reference
-        })) : undefined,
-        geometry: {
-          location: {
-            lat: place.geometry.location.lat,
-            lng: place.geometry.location.lng
-          }
-        }
-      }));
+      convertedResults = data.results.map((place: OldApiPlace) => {
+        // 為每個餐廳打印營業時間數據
+        console.log(`餐廳 ${place.name} 的營業時間:`, 
+          place.opening_hours ? JSON.stringify(place.opening_hours, null, 2) : '無營業時間數據');
+        
+        return {
+          place_id: place.place_id,
+          name: place.name,
+          vicinity: place.vicinity,
+          rating: place.rating,
+          user_ratings_total: place.user_ratings_total,
+          photos: place.photos ? place.photos.map((photo: { photo_reference: string }) => ({
+            photo_reference: photo.photo_reference
+          })) : undefined,
+          geometry: {
+            location: {
+              lat: place.geometry.location.lat,
+              lng: place.geometry.location.lng
+            }
+          },
+          business_status: place.business_status,
+          opening_hours: place.opening_hours ? {
+            open_now: place.opening_hours.open_now,
+            weekday_text: place.opening_hours.weekday_text
+          } : undefined
+        };
+      });
     } else {
       // 新版 API 回應格式處理
       if (!data.places || data.places.length === 0) {
         return await fallbackToTextSearch(location, apiKey, excludeIds);
       }
       
+      // 打印 API 響應以檢查營業時間數據
+      console.log('API 響應數據:', JSON.stringify(data.places[0], null, 2));
+      
       convertedResults = data.places.map((place: NewPlaceResult) => {
+        // 為每個餐廳打印營業時間數據
+        console.log(`餐廳 ${place.displayName.text} 的營業時間:`, 
+          place.currentOpeningHours ? JSON.stringify(place.currentOpeningHours, null, 2) : '無營業時間數據');
+        
         return {
           place_id: place.id,
           name: place.displayName.text,
@@ -283,7 +325,15 @@ async function fallbackToTextSearch(location: string, apiKey: string, excludePla
           lng: number;
         }
       };
+      business_status?: string;
+      opening_hours?: {
+        open_now?: boolean;
+        weekday_text?: string[];
+      };
     }) => {
+      // 打印餐廳數據以檢查是否有營業時間
+      console.log(`POST 方法中餐廳 ${place.name} 的數據:`, JSON.stringify(place, null, 2));
+      
       return {
         place_id: place.place_id,
         name: place.name,
@@ -298,7 +348,12 @@ async function fallbackToTextSearch(location: string, apiKey: string, excludePla
             lat: place.geometry.location.lat,
             lng: place.geometry.location.lng
           }
-        }
+        },
+        business_status: place.business_status,
+        opening_hours: place.opening_hours ? {
+          open_now: place.opening_hours.open_now,
+          weekday_text: place.opening_hours.weekday_text
+        } : undefined
       };
     });
 
@@ -319,7 +374,6 @@ async function fallbackToTextSearch(location: string, apiKey: string, excludePla
   }
 }
 
-// 如果所有 API 請求都失敗，返回一些硬編碼的餐廳數據
 function getHardcodedRestaurants(excludePlaceIds: string[] = []) {
   const fallbackRestaurants = [
     {
@@ -333,6 +387,19 @@ function getHardcodedRestaurants(excludePlaceIds: string[] = []) {
           lat: 25.0339639,
           lng: 121.5644722
         }
+      },
+      business_status: 'OPERATIONAL',
+      opening_hours: {
+        open_now: true,
+        weekday_text: [
+          '星期一: 11:00 – 21:00',
+          '星期二: 11:00 – 21:00',
+          '星期三: 11:00 – 21:00',
+          '星期四: 11:00 – 21:00',
+          '星期五: 11:00 – 21:30',
+          '星期六: 10:00 – 21:30',
+          '星期日: 10:00 – 21:00'
+        ]
       }
     },
     {
@@ -346,6 +413,19 @@ function getHardcodedRestaurants(excludePlaceIds: string[] = []) {
           lat: 25.0359639,
           lng: 121.5674722
         }
+      },
+      business_status: 'OPERATIONAL',
+      opening_hours: {
+        open_now: true,
+        weekday_text: [
+          '星期一: 10:00 – 22:00',
+          '星期二: 10:00 – 22:00',
+          '星期三: 10:00 – 22:00',
+          '星期四: 10:00 – 22:00',
+          '星期五: 10:00 – 22:30',
+          '星期六: 09:00 – 22:30',
+          '星期日: 09:00 – 22:00'
+        ]
       }
     },
     {
@@ -359,6 +439,19 @@ function getHardcodedRestaurants(excludePlaceIds: string[] = []) {
           lat: 24.1654639,
           lng: 120.6464722
         }
+      },
+      business_status: 'OPERATIONAL',
+      opening_hours: {
+        open_now: true,
+        weekday_text: [
+          '星期一: 11:30 – 22:00',
+          '星期二: 11:30 – 22:00',
+          '星期三: 11:30 – 22:00',
+          '星期四: 11:30 – 22:00',
+          '星期五: 11:30 – 22:30',
+          '星期六: 11:00 – 22:30',
+          '星期日: 11:00 – 22:00'
+        ]
       }
     },
     {
