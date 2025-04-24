@@ -396,8 +396,8 @@ export default function RecommendationPage() {
                               const [weekday, hours] = chineseDay.split(': ');
                               
                               return (
-                                <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mr: 2, minWidth: '60px' }}>
+                                <Box key={index} sx={{ display: 'flex', mb: 0.5 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mr: 1, minWidth: '45px' }}>
                                     {weekday}
                                   </Typography>
                                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', flexGrow: 1 }}>
