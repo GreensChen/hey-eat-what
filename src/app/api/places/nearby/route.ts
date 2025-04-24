@@ -1,5 +1,25 @@
 import { NextResponse } from 'next/server';
 
+// 獲取餐廳詳細資訊的函數
+async function getPlaceDetails(placeId: string, apiKey: string) {
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=business_status,opening_hours&key=${apiKey}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`獲取餐廳詳細資訊失敗: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log(`餐廳 ${placeId} 的詳細資訊:`, JSON.stringify(data.result).substring(0, 200));
+    return data.result;
+  } catch (error) {
+    console.error('獲取餐廳詳細資訊失敗:', error);
+    return null;
+  }
+}
+
 // 處理獲取附近餐廳的請求
 export async function GET(request: Request) {
   // 台灣觀光局 API URL
@@ -188,20 +208,22 @@ export async function GET(request: Request) {
     let convertedResults: Restaurant[] = [];
     
     if (isOldApiResponse) {
-      // 舊版 API 回應格式處理
+      // 老版 API 回應格式處理
       if (data.status !== 'OK' || !data.results || data.results.length === 0) {
         return await fallbackToTextSearch(location, apiKey, excludeIds);
       }
       
-      convertedResults = data.results.map((place: OldApiPlace) => {
+      // 先將基本數據轉換為 Restaurant 格式
+      convertedResults = await Promise.all(data.results.map(async (place: OldApiPlace) => {
         // 為每個餐廳打印營業時間數據
-        console.log(`餐廳 ${place.name} 的營業時間:`, 
-          place.opening_hours ? JSON.stringify(place.opening_hours, null, 2) : '無營業時間數據');
+        console.log(`餐廳 ${place.name} 的基本營業時間:`, 
+          place.opening_hours ? JSON.stringify(place.opening_hours, null, 2) : '無基本營業時間數據');
         
-        return {
+        // 創建餐廳基本數據對象
+        const restaurant: Restaurant = {
           place_id: place.place_id,
           name: place.name,
-          vicinity: place.vicinity,
+          vicinity: place.vicinity || '',
           rating: place.rating,
           user_ratings_total: place.user_ratings_total,
           photos: place.photos ? place.photos.map((photo: { photo_reference: string }) => ({
@@ -219,7 +241,29 @@ export async function GET(request: Request) {
             weekday_text: place.opening_hours.weekday_text
           } : undefined
         };
-      });
+        
+        // 如果沒有營業時間數據，嘗試獲取詳細資訊
+        if (!restaurant.opening_hours?.weekday_text) {
+          console.log(`嘗試獲取 ${place.name} 的詳細營業時間...`);
+          const details = await getPlaceDetails(place.place_id, apiKey);
+          
+          if (details && details.opening_hours && details.opening_hours.weekday_text) {
+            console.log(`成功獲取 ${place.name} 的詳細營業時間:`, 
+              JSON.stringify(details.opening_hours.weekday_text, null, 2));
+            
+            restaurant.opening_hours = {
+              open_now: details.opening_hours.open_now,
+              weekday_text: details.opening_hours.weekday_text
+            };
+            
+            if (details.business_status) {
+              restaurant.business_status = details.business_status;
+            }
+          }
+        }
+        
+        return restaurant;
+      }));
     } else {
       // 新版 API 回應格式處理
       if (!data.places || data.places.length === 0) {
@@ -229,12 +273,14 @@ export async function GET(request: Request) {
       // 打印 API 響應以檢查營業時間數據
       console.log('API 響應數據:', JSON.stringify(data.places[0], null, 2));
       
-      convertedResults = data.places.map((place: NewPlaceResult) => {
+      // 先將基本數據轉換為 Restaurant 格式
+      convertedResults = await Promise.all(data.places.map(async (place: NewPlaceResult) => {
         // 為每個餐廳打印營業時間數據
-        console.log(`餐廳 ${place.displayName.text} 的營業時間:`, 
-          place.currentOpeningHours ? JSON.stringify(place.currentOpeningHours, null, 2) : '無營業時間數據');
+        console.log(`餐廳 ${place.displayName.text} 的基本營業時間:`, 
+          place.currentOpeningHours ? JSON.stringify(place.currentOpeningHours, null, 2) : '無基本營業時間數據');
         
-        return {
+        // 創建餐廳基本數據對象
+        const restaurant: Restaurant = {
           place_id: place.id,
           name: place.displayName.text,
           vicinity: place.formattedAddress,
@@ -255,7 +301,29 @@ export async function GET(request: Request) {
             weekday_text: place.currentOpeningHours.weekdayText
           } : undefined
         };
-      });
+        
+        // 如果沒有營業時間數據，嘗試獲取詳細資訊
+        if (!restaurant.opening_hours?.weekday_text) {
+          console.log(`嘗試獲取 ${place.displayName.text} 的詳細營業時間...`);
+          const details = await getPlaceDetails(place.id, apiKey);
+          
+          if (details && details.opening_hours && details.opening_hours.weekday_text) {
+            console.log(`成功獲取 ${place.displayName.text} 的詳細營業時間:`, 
+              JSON.stringify(details.opening_hours.weekday_text, null, 2));
+            
+            restaurant.opening_hours = {
+              open_now: details.opening_hours.open_now,
+              weekday_text: details.opening_hours.weekday_text
+            };
+            
+            if (details.business_status) {
+              restaurant.business_status = details.business_status;
+            }
+          }
+        }
+        
+        return restaurant;
+      }));
     }
 
     // 過濾掉已經顯示過的餐廳
