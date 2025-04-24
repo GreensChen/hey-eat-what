@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': apiKey,
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location'
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.location,places.businessStatus,places.currentOpeningHours'
         },
         body: JSON.stringify({
           'textQuery': searchQuery,
@@ -115,6 +115,11 @@ export async function GET(request: Request) {
         latitude: number;
         longitude: number;
       };
+      businessStatus?: string;
+      currentOpeningHours?: {
+        openNow?: boolean;
+        weekdayText?: string[];
+      };
     }
 
     // 定義舊版 API 的餐廳結果介面
@@ -147,6 +152,11 @@ export async function GET(request: Request) {
           lat: number;
           lng: number;
         }
+      };
+      business_status?: string;
+      opening_hours?: {
+        open_now?: boolean;
+        weekday_text?: string[];
       };
     }
 
@@ -196,7 +206,12 @@ export async function GET(request: Request) {
               lat: place.location.latitude,
               lng: place.location.longitude
             } : { lat: 0, lng: 0 }
-          }
+          },
+          business_status: place.businessStatus,
+          opening_hours: place.currentOpeningHours ? {
+            open_now: place.currentOpeningHours.openNow,
+            weekday_text: place.currentOpeningHours.weekdayText
+          } : undefined
         };
       });
     }

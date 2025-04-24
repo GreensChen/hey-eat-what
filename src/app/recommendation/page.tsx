@@ -36,6 +36,11 @@ interface Restaurant {
       lng: number;
     }
   };
+  business_status?: string;
+  opening_hours?: {
+    open_now?: boolean;
+    weekday_text?: string[];
+  };
 }
 
 export default function RecommendationPage() {
@@ -276,12 +281,27 @@ export default function RecommendationPage() {
                     </Typography>
                   </Box>
                   
-                  <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+                  <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1 }}>
                     <LocationIcon fontSize="small" color="action" sx={{ mt: 0.3, mr: 0.5 }} />
                     <Typography variant="body2" color="text.secondary">
                       {restaurant.vicinity}
                     </Typography>
                   </Box>
+                  
+                  {restaurant.opening_hours?.weekday_text && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        營業時間
+                      </Typography>
+                      <Box sx={{ pl: 1 }}>
+                        {restaurant.opening_hours.weekday_text.map((day, index) => (
+                          <Typography key={index} variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                            {day}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </CardContent>
                 <Box sx={{ px: 2, pb: 2, pt: 0, mt: 0 }}>
                   <Button 
