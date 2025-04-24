@@ -214,7 +214,7 @@ export default function RecommendationPage() {
           <ArrowBackIcon />
         </IconButton>
         <Typography 
-          variant="h5" 
+          variant="h4" 
           component="h1" 
           gutterBottom 
           align="center" 
