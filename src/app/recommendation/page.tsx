@@ -249,7 +249,7 @@ export default function RecommendationPage() {
 
   if (loading) {
     return (
-      <Container maxWidth="sm" sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <Container maxWidth="sm" sx={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", mt: -2.5 }}>
         <Box textAlign="center">
           <CircularProgress size={40} sx={{ mb: 2 }} />
           <Typography variant="h6">正在尋找美食...</Typography>
@@ -288,7 +288,7 @@ export default function RecommendationPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", width: "100%" }}>
+      <Box sx={{ mb: 4, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", width: "100%", mt: -2.5 }}>
         <IconButton 
           onClick={handleBackToHome} 
           sx={{ position: "absolute", left: 0 }}
