@@ -12,7 +12,6 @@ import {
   Button, 
   CircularProgress,
   Rating,
-  Chip,
   Stack,
   IconButton
 } from "@mui/material";
@@ -20,8 +19,7 @@ import {
   LocationOn as LocationIcon, 
   Star as StarIcon,
   Refresh as RefreshIcon,
-  ArrowBack as ArrowBackIcon,
-  Directions as DirectionsIcon
+  ArrowBack as ArrowBackIcon
 } from "@mui/icons-material";
 
 // 餐廳資料介面
@@ -224,7 +222,7 @@ export default function RecommendationPage() {
             textAlign: "center"
           }}
         >
-          就這個吧！
+          不然就這幾間？
         </Typography>
       </Box>
       
@@ -259,7 +257,7 @@ export default function RecommendationPage() {
                     : "https://via.placeholder.com/400x160?text=沒有照片"}
                   alt={restaurant.name}
                 />
-                <CardContent sx={{ minHeight: '180px' }}>
+                <CardContent sx={{ minHeight: '150px', pb: 0, mb: -2 }}>
                   <Typography variant="h6" gutterBottom noWrap sx={{ fontWeight: 'bold' }}>
                     {restaurant.name}
                   </Typography>
@@ -284,21 +282,26 @@ export default function RecommendationPage() {
                       {restaurant.vicinity}
                     </Typography>
                   </Box>
-                  
-                  <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-                    <Chip 
-                      icon={<DirectionsIcon />} 
-                      label="導航前往" 
-                      color="primary" 
-                      variant="outlined" 
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenMaps(restaurant);
-                      }}
-                    />
-                  </Box>
                 </CardContent>
+                <Box sx={{ px: 2, pb: 2, pt: 0, mt: 0 }}>
+                  <Button 
+                    variant="text" 
+                    color="primary" 
+                    fullWidth
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenMaps(restaurant);
+                    }}
+                    sx={{ 
+                      textAlign: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 0,
+                      pt: 1
+                    }}
+                  >
+                    就決定是你了！
+                  </Button>
+                </Box>
               </Card>
             ))}
           </Stack>
