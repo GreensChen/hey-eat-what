@@ -2,6 +2,8 @@
 
 「欸！要吃什麼！」是一個幫助用戶快速決定用餐選擇的手機版網頁應用。當用戶無法決定吃什麼時，只需點擊一個按鈕，應用程式就會根據用戶當前位置，隨機推薦附近的餐廳，解決用戶的「選擇困難症」。
 
+[![Vercel 部署狀態](https://img.shields.io/badge/Vercel-%E9%83%A8%E7%BD%B2%E6%88%90%E5%8A%9F-brightgreen)](https://hey-eat-what.vercel.app/)
+
 ## 功能特色
 
 - 自動獲取用戶當前位置
