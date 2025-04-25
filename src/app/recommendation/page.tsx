@@ -340,6 +340,7 @@ export default function RecommendationPage() {
                     transform: "translateY(-4px)"
                   }
                 }}
+                onClick={(e) => handleOpenPlaceDetails(restaurant, e)}
               >
                 <CardMedia
                   component="img"
@@ -437,7 +438,7 @@ export default function RecommendationPage() {
                     fullWidth
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleOpenMaps(restaurant);
+                      handleOpenPlaceDetails(restaurant, e);
                     }}
                     sx={{ 
                       textAlign: 'center',
