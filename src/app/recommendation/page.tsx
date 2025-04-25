@@ -234,6 +234,7 @@ export default function RecommendationPage() {
   };
   
   // 處理點擊餐廳卡片，開啟 Google Maps 導航
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleOpenMaps = (restaurant: Restaurant) => {
     // 按照指南構建導航鏈接
     // 正確格式: https://www.google.com/maps/dir/?api=1&destination=餐廳名稱&destination_place_id=place_id
@@ -242,7 +243,7 @@ export default function RecommendationPage() {
     // 使用 window.location.href 替代 window.open()，避免開啟新分頁
     window.location.href = mapsUrl;
   };
-
+  
   // 處理點擊餐廳資訊區域，開啟 Google 店家資訊頁面
   const handleOpenPlaceDetails = (restaurant: Restaurant, e: React.MouseEvent) => {
     e.stopPropagation(); // 防止事件冒泡
