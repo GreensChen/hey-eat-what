@@ -236,8 +236,8 @@ export default function RecommendationPage() {
   // 處理點擊餐廳卡片，開啟 Google Maps 導航
   const handleOpenMaps = (restaurant: Restaurant) => {
     // 按照指南構建導航鏈接
-    // 格式: https://www.google.com/maps/dir/?api=1&destination=餐廳名稱+地址&destination_place_id=place_id
-    const destination = encodeURIComponent(`${restaurant.name} ${restaurant.vicinity}`);
+    // 正確格式: https://www.google.com/maps/dir/?api=1&destination=餐廳名稱&destination_place_id=place_id
+    const destination = encodeURIComponent(restaurant.name);
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${restaurant.place_id}`;
     window.open(mapsUrl, "_blank");
   };
@@ -246,8 +246,9 @@ export default function RecommendationPage() {
   const handleOpenPlaceDetails = (restaurant: Restaurant, e: React.MouseEvent) => {
     e.stopPropagation(); // 防止事件冒泡
     // 構建 Google 地圖店家頁面鏈接
-    // 格式: https://www.google.com/maps/place/?q=place_id:餐廳ID
-    const placeUrl = `https://www.google.com/maps/place/?q=place_id:${restaurant.place_id}`;
+    // 正確格式: https://www.google.com/maps/place/?q=餐廳名稱&place_id=餐廳ID
+    const placeName = encodeURIComponent(restaurant.name);
+    const placeUrl = `https://www.google.com/maps/place/?q=${placeName}&place_id=${restaurant.place_id}`;
     window.open(placeUrl, "_blank");
   };
   
