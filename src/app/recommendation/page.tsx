@@ -241,6 +241,15 @@ export default function RecommendationPage() {
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${restaurant.place_id}`;
     window.open(mapsUrl, "_blank");
   };
+
+  // 處理點擊餐廳資訊區域，開啟 Google 店家資訊頁面
+  const handleOpenPlaceDetails = (restaurant: Restaurant, e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止事件冒泡
+    // 構建 Google 地圖店家頁面鏈接
+    // 格式: https://www.google.com/maps/place/?q=place_id:餐廳ID
+    const placeUrl = `https://www.google.com/maps/place/?q=place_id:${restaurant.place_id}`;
+    window.open(placeUrl, "_blank");
+  };
   
   // 獲取餐廳照片 URL - 使用新的 API 路徑
   const getPhotoUrl = (photoReference: string) => {
@@ -328,7 +337,6 @@ export default function RecommendationPage() {
                     transform: "translateY(-4px)"
                   }
                 }}
-                onClick={() => handleOpenMaps(restaurant)}
               >
                 <CardMedia
                   component="img"
@@ -344,7 +352,10 @@ export default function RecommendationPage() {
                     : "https://via.placeholder.com/400x160?text=沒有照片"}
                   alt={restaurant.name}
                 />
-                <CardContent sx={{ flexGrow: 1, pb: 0, mb: 0 }}>
+                <CardContent 
+                  sx={{ flexGrow: 1, pb: 0, mb: 0, cursor: 'pointer' }}
+                  onClick={(e) => handleOpenPlaceDetails(restaurant, e)}
+                >
                   <Typography variant="h6" gutterBottom noWrap sx={{ fontWeight: 'bold' }}>
                     {restaurant.name}
                   </Typography>
