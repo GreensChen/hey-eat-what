@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const photoName = searchParams.get('photo_reference');
     const maxWidth = searchParams.get('maxwidth') || '800';
-    const maxHeight = searchParams.get('maxheight') || '800';
+    // 移除未使用的變量
+    // const maxHeight = searchParams.get('maxheight') || '800';
     
     if (!photoName) {
       return NextResponse.json(
@@ -43,35 +44,26 @@ export async function GET(request: NextRequest) {
       'Accept': 'image/jpeg, image/png, */*'
     };
     
-    try {
-      // 使用服務器端發送請求，不受引用限制影響
-      const oldApiResponse = await fetch(oldApiUrl.toString(), { headers });
-      
-      if (!oldApiResponse.ok) {
-        console.error(`照片請求失敗: ${oldApiResponse.status} ${oldApiResponse.statusText}`);
-        return NextResponse.json(
-          { error: `無法獲取照片: ${oldApiResponse.status}` },
-          { status: oldApiResponse.status }
-        );
-      }
-      
-      const imageBuffer = await oldApiResponse.arrayBuffer();
-      return new NextResponse(imageBuffer, {
-        headers: {
-          'Content-Type': oldApiResponse.headers.get('Content-Type') || 'image/jpeg',
-          'Cache-Control': 'public, max-age=86400' // 快取 24 小時
-        }
-      });
-    } catch (error) {
-      console.error('照片請求發生錯誤:', error);
+    // 使用服務器端發送請求，不受引用限制影響
+    const oldApiResponse = await fetch(oldApiUrl.toString(), { headers });
+    
+    if (!oldApiResponse.ok) {
+      console.error(`照片請求失敗: ${oldApiResponse.status} ${oldApiResponse.statusText}`);
       return NextResponse.json(
-        { error: '無效的照片參考或照片不存在' },
-        { status: 500 }
+        { error: `無法獲取照片: ${oldApiResponse.status}` },
+        { status: oldApiResponse.status }
       );
     }
     
-    // 注意: 我們已經在上面的代碼中處理了照片請求，不需要這部分代碼
-    // 這部分代碼沒有被執行，因為我們已經在上面返回了響應
+    const imageBuffer = await oldApiResponse.arrayBuffer();
+    return new NextResponse(imageBuffer, {
+      headers: {
+        'Content-Type': oldApiResponse.headers.get('Content-Type') || 'image/jpeg',
+        'Cache-Control': 'public, max-age=86400' // 快取 24 小時
+      }
+    });
+    
+    // 不需要額外的代碼，我們已經處理了照片請求
   } catch (error) {
     console.error('處理照片請求時出錯:', error);
     return NextResponse.json(
