@@ -30,62 +30,48 @@ export async function GET(request: NextRequest) {
     // 參考文檔: https://developers.google.com/maps/documentation/places/web-service/photos?hl=zh-tw
     // 格式: https://places.googleapis.com/v1/NAME/media?maxHeightPx=800&maxWidthPx=800&key=API_KEY
     
-    // 檢查是否是完整的照片路徑
-    let photoUrl: string;
-    if (photoName.startsWith('places/')) {
-      // 如果已經是完整的路徑，直接使用
-      photoUrl = `https://places.googleapis.com/v1/${photoName}/media`;
-    } else {
-      // 如果是舊版的 photo_reference，嘗試使用舊版 API
-      const oldApiUrl = new URL('https://maps.googleapis.com/maps/api/place/photo');
-      oldApiUrl.searchParams.append('photoreference', photoName);
-      oldApiUrl.searchParams.append('maxwidth', maxWidth);
-      oldApiUrl.searchParams.append('key', apiKey);
+    // 修改以解決 API 憑證限制問題
+    // 使用服務器端代理請求，避免引用限制問題
+    const oldApiUrl = new URL('https://maps.googleapis.com/maps/api/place/photo');
+    oldApiUrl.searchParams.append('photoreference', photoName);
+    oldApiUrl.searchParams.append('maxwidth', maxWidth);
+    oldApiUrl.searchParams.append('key', apiKey);
+    
+    // 設置請求頭，模擬服務器端請求
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Node.js) Server-Side Request',
+      'Accept': 'image/jpeg, image/png, */*'
+    };
+    
+    try {
+      // 使用服務器端發送請求，不受引用限制影響
+      const oldApiResponse = await fetch(oldApiUrl.toString(), { headers });
       
-      const oldApiResponse = await fetch(oldApiUrl.toString());
-      if (oldApiResponse.ok) {
-        const imageBuffer = await oldApiResponse.arrayBuffer();
-        return new NextResponse(imageBuffer, {
-          headers: {
-            'Content-Type': oldApiResponse.headers.get('Content-Type') || 'image/jpeg',
-            'Cache-Control': 'public, max-age=86400' // 快取 24 小時
-          }
-        });
+      if (!oldApiResponse.ok) {
+        console.error(`照片請求失敗: ${oldApiResponse.status} ${oldApiResponse.statusText}`);
+        return NextResponse.json(
+          { error: `無法獲取照片: ${oldApiResponse.status}` },
+          { status: oldApiResponse.status }
+        );
       }
       
-      // 如果舊版 API 失敗，返回錯誤
+      const imageBuffer = await oldApiResponse.arrayBuffer();
+      return new NextResponse(imageBuffer, {
+        headers: {
+          'Content-Type': oldApiResponse.headers.get('Content-Type') || 'image/jpeg',
+          'Cache-Control': 'public, max-age=86400' // 快取 24 小時
+        }
+      });
+    } catch (error) {
+      console.error('照片請求發生錯誤:', error);
       return NextResponse.json(
         { error: '無效的照片參考或照片不存在' },
-        { status: 404 }
+        { status: 500 }
       );
     }
     
-    // 添加查詢參數
-    const url = new URL(photoUrl);
-    url.searchParams.append('maxWidthPx', maxWidth);
-    url.searchParams.append('maxHeightPx', maxHeight);
-    url.searchParams.append('key', apiKey);
-    
-    // 發送請求到新版 Google Places Photos API
-    const response = await fetch(url.toString());
-    
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: `獲取照片失敗: ${response.status}` },
-        { status: response.status }
-      );
-    }
-    
-    // 獲取照片的二進制數據
-    const imageBuffer = await response.arrayBuffer();
-    
-    // 創建一個新的 Response 對象，包含照片數據和正確的 Content-Type
-    return new NextResponse(imageBuffer, {
-      headers: {
-        'Content-Type': response.headers.get('Content-Type') || 'image/jpeg',
-        'Cache-Control': 'public, max-age=86400' // 快取 24 小時
-      }
-    });
+    // 注意: 我們已經在上面的代碼中處理了照片請求，不需要這部分代碼
+    // 這部分代碼沒有被執行，因為我們已經在上面返回了響應
   } catch (error) {
     console.error('處理照片請求時出錯:', error);
     return NextResponse.json(
