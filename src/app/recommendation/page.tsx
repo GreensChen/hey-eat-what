@@ -257,7 +257,16 @@ export default function RecommendationPage() {
   
   // 獲取餐廳照片 URL - 使用新的 API 路徑
   const getPhotoUrl = (photoReference: string) => {
-    return `/api/places/photo?photo_reference=${photoReference}`;
+    if (!photoReference) {
+      return "https://via.placeholder.com/400x160?text=沒有照片";
+    }
+    // 加入亂數避免快取問題
+    return `/api/places/photo?photo_reference=${photoReference}&random=${Math.random()}`;
+  };
+  
+  // 照片載入錯誤處理
+  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    event.currentTarget.src = "https://via.placeholder.com/400x160?text=無法載入照片";
   };
 
   if (loading) {
@@ -356,6 +365,8 @@ export default function RecommendationPage() {
                     ? getPhotoUrl(restaurant.photos[0].photo_reference)
                     : "https://via.placeholder.com/400x160?text=沒有照片"}
                   alt={restaurant.name}
+                  onError={handleImageError}
+                  loading="lazy"
                 />
                 <CardContent 
                   sx={{ flexGrow: 1, pb: 0, mb: 0, cursor: 'pointer' }}
