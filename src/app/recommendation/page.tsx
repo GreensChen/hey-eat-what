@@ -239,7 +239,8 @@ export default function RecommendationPage() {
     // 正確格式: https://www.google.com/maps/dir/?api=1&destination=餐廳名稱&destination_place_id=place_id
     const destination = encodeURIComponent(restaurant.name);
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${restaurant.place_id}`;
-    window.open(mapsUrl, "_blank");
+    // 使用 window.location.href 替代 window.open()，避免開啟新分頁
+    window.location.href = mapsUrl;
   };
 
   // 處理點擊餐廳資訊區域，開啟 Google 店家資訊頁面
@@ -249,7 +250,8 @@ export default function RecommendationPage() {
     // 正確格式: https://www.google.com/maps/place/?q=餐廳名稱&place_id=餐廳ID
     const placeName = encodeURIComponent(restaurant.name);
     const placeUrl = `https://www.google.com/maps/place/?q=${placeName}&place_id=${restaurant.place_id}`;
-    window.open(placeUrl, "_blank");
+    // 使用 window.location.href 替代 window.open()，避免開啟新分頁
+    window.location.href = placeUrl;
   };
   
   // 獲取餐廳照片 URL - 使用新的 API 路徑
