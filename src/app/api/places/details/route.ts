@@ -14,6 +14,32 @@ export async function GET(request: Request) {
       );
     }
     
+    // 檢查是否設置了使用模擬數據的環境變量
+    const useMockData = process.env.USE_MOCK_DATA === 'true' || !process.env.GOOGLE_MAPS_API_KEY;
+    
+    if (useMockData) {
+      console.log('使用模擬數據代替 Enterprise Places API');
+      
+      // 返回模擬的餐廳詳細資訊
+      return NextResponse.json({
+        details: {
+          business_status: 'OPERATIONAL',
+          opening_hours: {
+            open_now: true,
+            weekday_text: [
+              '星期一: 11:00 – 21:30',
+              '星期二: 11:00 – 21:30',
+              '星期三: 11:00 – 21:30',
+              '星期四: 11:00 – 21:30',
+              '星期五: 11:00 – 22:00',
+              '星期六: 10:00 – 22:00',
+              '星期日: 10:00 – 21:30'
+            ]
+          }
+        }
+      });
+    }
+    
     // 獲取環境變數中的 Google Maps API Key
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     
@@ -25,8 +51,25 @@ export async function GET(request: Request) {
     }
     
     // 使用 Google Places API 獲取餐廳詳細資訊
+    // 只請求基本欄位，不請求 Enterprise Places - Contact Data API 的欄位
+    const fields = [
+      'place_id',
+      'name',
+      'vicinity',
+      'formatted_address',
+      'rating',
+      'user_ratings_total',
+      'photos',
+      'geometry',
+      'business_status',
+      'opening_hours',
+      'price_level',
+      'types',
+      'plus_code'
+    ].join(',');
+    
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=business_status,opening_hours&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}`
     );
     
     if (!response.ok) {

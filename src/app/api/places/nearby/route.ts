@@ -3,8 +3,25 @@ import { NextResponse } from 'next/server';
 // 獲取餐廳詳細資訊的函數
 async function getPlaceDetails(placeId: string, apiKey: string) {
   try {
+    // 只請求基本欄位，不請求 Enterprise Places - Contact Data API 的欄位
+    const fields = [
+      'place_id',
+      'name',
+      'vicinity',
+      'formatted_address',
+      'rating',
+      'user_ratings_total',
+      'photos',
+      'geometry',
+      'business_status',
+      'opening_hours',
+      'price_level',
+      'types',
+      'plus_code'
+    ].join(',');
+    
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=business_status,opening_hours&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}`
     );
     
     if (!response.ok) {
@@ -22,6 +39,23 @@ async function getPlaceDetails(placeId: string, apiKey: string) {
 
 // 處理獲取附近餐廳的請求
 export async function GET(request: Request) {
+  // 檢查是否設置了使用模擬數據的環境變量
+  const useMockData = process.env.USE_MOCK_DATA === 'true' || !process.env.GOOGLE_MAPS_API_KEY;
+  
+  if (useMockData) {
+    console.log('使用模擬數據代替 Google Places API');
+    
+    // 從 URL 參數中獲取排除的餐廳 ID
+    const url = new URL(request.url);
+    const excludePlaceIdsParam = url.searchParams.get('excludePlaceIds');
+    const excludePlaceIds = excludePlaceIdsParam ? JSON.parse(excludePlaceIdsParam) : [];
+    
+    // 使用硬編碼的餐廳數據
+    const restaurants = getHardcodedRestaurants(excludePlaceIds);
+    
+    return NextResponse.json({ restaurants });
+  }
+  
   // 台灣觀光局 API URL
   const taiwanApiUrl = 'https://media.taiwan.net.tw/XMLReleaseALL_public/restaurant_C_f.json';
   
@@ -352,8 +386,19 @@ export async function GET(request: Request) {
 // 當附近餐廳不足時，使用更廣範圍的搜尋
 async function fallbackToTextSearch(location: string, apiKey: string, excludePlaceIds: string[] = []) {
   try {
-    // 使用位置參數直接在 URL 中使用，不需要分割
+    // 檢查是否設置了使用模擬數據的環境變量
+    const useMockData = process.env.USE_MOCK_DATA === 'true' || !process.env.GOOGLE_MAPS_API_KEY || true; // 預設使用模擬數據
     
+    if (useMockData) {
+      console.log('使用模擬數據代替 Text Search API');
+      
+      // 使用硬編碼的餐廳數據
+      const restaurants = getHardcodedRestaurants(excludePlaceIds);
+      
+      return NextResponse.json({ restaurants });
+    }
+    
+    // 以下代碼保留，但目前不會執行，因為 useMockData 預設為 true
     // 嘗試使用舊版 API 進行更廣範圍的搜尋
     console.log('使用備用搜尋方法...');
     const textSearchUrl = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');

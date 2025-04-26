@@ -11,6 +11,32 @@ export async function GET(request: NextRequest) {
     
     console.log(`照片請求參數: photo_reference=${photoReference}, maxwidth=${maxWidth}, random=${random}`);
     
+    // 檢查是否設置了使用模擬數據的環境變量
+    const useMockData = process.env.USE_MOCK_DATA === 'true' || !process.env.GOOGLE_MAPS_API_KEY;
+    
+    if (useMockData) {
+      console.log('使用模擬數據代替 Google Places Photos API');
+      
+      // 使用不同的餐廳圖片作為模擬數據
+      const mockImages = [
+        'https://via.placeholder.com/400x300?text=餐廳圖片模擬數據1',
+        'https://via.placeholder.com/400x300?text=餐廳圖片模擬數據2',
+        'https://via.placeholder.com/400x300?text=餐廳圖片模擬數據3',
+        'https://via.placeholder.com/400x300?text=餐廳圖片模擬數據4',
+        'https://via.placeholder.com/400x300?text=餐廳圖片模擬數據5'
+      ];
+      
+      // 根據 photoReference 的最後一個字符選擇一個模擬圖片
+      // 確保 photoReference 不為 null
+      const index = photoReference ? parseInt(photoReference.slice(-1), 16) % mockImages.length : 0;
+      const mockImageUrl = mockImages[index];
+      
+      return new Response(
+        mockImageUrl,
+        { headers: { 'Content-Type': 'text/plain' } }
+      );
+    }
+    
     if (!photoReference) {
       console.error('缺少照片參考參數');
       // 返回備用照片 URL
