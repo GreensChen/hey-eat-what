@@ -178,12 +178,30 @@ export async function getNearbyPlaces(
       return [];
     }
     
+    // 定義 Google Places API 返回的地點類型
+    interface GooglePlace {
+      place_id: string;
+      name: string;
+      vicinity: string;
+      rating?: number;
+      user_ratings_total?: number;
+      geometry: {
+        location: {
+          lat: number;
+          lng: number;
+        }
+      };
+      photos?: Array<{
+        photo_reference: string;
+      }>;
+    }
+    
     // 過濾掉已經排除的餐廳
     const excludeSet = new Set(excludePlaceIds);
-    const filteredResults = data.results.filter(place => !excludeSet.has(place.place_id));
+    const filteredResults = data.results.filter((place: GooglePlace) => !excludeSet.has(place.place_id));
     
     // 將 Google Places API 結果轉換為應用程序的 Restaurant 格式
-    const restaurants: Restaurant[] = filteredResults.map(place => {
+    const restaurants: Restaurant[] = filteredResults.map((place: GooglePlace) => {
       let photoUrl: string | undefined = undefined;
       
       if (place.photos && place.photos.length > 0) {

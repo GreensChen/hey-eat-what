@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button, Typography, Box, Container, CircularProgress } from "@mui/material";
 
 export default function Home() {
-  const _router = useRouter(); // 未使用但保留以備將來使用
   const [loading, setLoading] = useState(false);
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
-  const [_coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null); // 未使用但保留以備將來使用
+  const [, setCoordinates] = useState<{ lat: number; lng: number } | null>(null); // 只使用 setter 函數
 
   // 請求位置權限
   useEffect(() => {
