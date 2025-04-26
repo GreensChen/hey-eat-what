@@ -36,6 +36,10 @@ interface Restaurant {
   travel_time?: string;
 }
 
+// 定義是否使用模擬數據
+// 在生產環境中應該為 false，這裡設為 false 以使用真實 API
+const useMockData = false;
+
 export default function RecommendationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
